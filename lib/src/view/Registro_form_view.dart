@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class RegistrationFormView extends StatefulWidget {
+class RegistroFormView extends StatefulWidget {
   final String? email;
   final String? verificationCode;
-  const RegistrationFormView({super.key, this.email, this.verificationCode});
+  const RegistroFormView({super.key, this.email, this.verificationCode});
 
   @override
-  State<RegistrationFormView> createState() => _RegistrationFormViewState();
+  State<RegistroFormView> createState() => _RegistroFormViewState();
 }
 
-class _RegistrationFormViewState extends State<RegistrationFormView> {
+class _RegistroFormViewState extends State<RegistroFormView> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _academic = TextEditingController();

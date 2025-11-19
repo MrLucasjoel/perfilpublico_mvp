@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:perfilpublico/src/view/registration_form_view.dart';
+import 'package:perfilpublico/src/view/Registro_form_view.dart';
 
-class RegistrationRequestView extends StatefulWidget {
-  const RegistrationRequestView({super.key});
+class RegistroView extends StatefulWidget {
+  const RegistroView({super.key});
 
   @override
-  State<RegistrationRequestView> createState() => _RegistrationRequestViewState();
+  State<RegistroView> createState() => _RegistroViewState();
 }
 
-class _RegistrationRequestViewState extends State<RegistrationRequestView> {
+class _RegistroViewState extends State<RegistroView> {
   final TextEditingController _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _generatedCode;
@@ -53,7 +53,7 @@ class _RegistrationRequestViewState extends State<RegistrationRequestView> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RegistrationFormView(
+        builder: (context) => RegistroFormView(
           email: email,
           verificationCode: _generatedCode,
         ),

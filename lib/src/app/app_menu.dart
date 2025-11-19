@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:perfilpublico/src/view/registration_request_view.dart';
+import 'package:perfilpublico/src/view/registro_view.dart';
 
 // O Drawer foi movido para uma classe separada para manter a HomeView mais limpa.
 class AppMenu extends StatelessWidget {
@@ -33,7 +33,7 @@ class AppMenu extends StatelessWidget {
             onTap: () {
               Navigator.of(context).pop();
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (c) => const RegistrationRequestView()),
+                MaterialPageRoute(builder: (c) => const RegistroView()),
               );
             },
           ),
