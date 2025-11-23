@@ -236,12 +236,12 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                     decoration: InputDecoration(
                       hintText: 'Pesquisar...',
                       filled: true,
-                      fillColor: const Color.fromARGB(255, 204, 204, 204),
+                      fillColor: const Color.fromARGB(255, 255, 255, 255),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: const BorderSide(
-                          color: Colors.grey,
+                          color: Color.fromARGB(255, 0, 0, 0),
                           width: 1.5,
                         ),
                       ),
@@ -276,7 +276,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   decoration: BoxDecoration(
                     color: widget.isFilterActive ? Theme.of(context).primaryColor : Colors.grey.shade300, 
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.grey.shade600)
+                    border: Border.all(color: const Color.fromARGB(255, 0, 0, 0))
                   ),
                   child: IconButton(
                     icon: Icon(
