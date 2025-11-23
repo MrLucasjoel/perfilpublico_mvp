@@ -1,4 +1,4 @@
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+/* //import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdService {
   // IMPORTANTE: Substitua estes IDs pelos seus Ad Unit IDs reais do Google AdMob
@@ -106,3 +106,4 @@ class AdService {
     _interstitialAd?.dispose();
   }
 }
+ */

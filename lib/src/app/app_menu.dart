@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:perfilpublico/src/view/logo_view.dart';
 import 'package:perfilpublico/src/view/registro_view.dart';
 
 // O Drawer foi movido para uma classe separada para manter a HomeView mais limpa.
@@ -17,7 +18,7 @@ class AppMenu extends StatelessWidget {
             ),
             child: Text(
               'Menu',
-              style: TextStyle(color: Color.fromARGB(255, 255, 255, 255), fontSize: 24),
+              style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 24),
             ),
           ),
           ListTile(
@@ -45,7 +46,12 @@ class AppMenu extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Sair'),
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (c) => const LogoView()),
+              );
+            },
           ),
         ],
       ),

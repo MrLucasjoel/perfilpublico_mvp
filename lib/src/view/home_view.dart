@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:perfilpublico/src/app/app_menu.dart';
 import 'package:perfilpublico/src/model/deputado.dart';
-import 'package:perfilpublico/src/services/ad_service.dart';
 import 'package:perfilpublico/src/services/deputado_service.dart';
 import 'package:perfilpublico/src/view/deputado_perfil_view.dart';
+import 'package:perfilpublico/src/view/registro_view.dart';
+// Importa o novo widget de pesquisa
+import 'package:perfilpublico/src/widget/search_bar_widget.dart'; 
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -14,14 +15,28 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
+  // 1. Controles de UI
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  BannerAd? _bannerAd;
-  bool _isBannerAdLoaded = false;
 
+  // 2. Estado dos Filtros
+  String? _selectedPartido;
+  String? _selectedEstado; // Mapeado para 'uf'
+  String? _selectedCargo;
+  String? _selectedCidade; 
+
+  // 3. Opções de Filtro (Carregadas após obter os deputados)
+  Set<String> _uniquePartidos = {};
+  Set<String> _uniqueUFs = {};
+  final Set<String> _uniqueCargos = {'Deputado Federal', 'Senador', 'Prefeito'};
+  final Set<String> _uniqueCidades = {'São Paulo', 'Rio de Janeiro', 'Brasília'}; 
+
+  // 4. Listas de Dados
   List<Deputado> _allDeputados = [];
   List<Deputado> _filteredDeputados = [];
-  bool _isSearching = false;
+
+  // 5. Estado de Carregamento/Busca
+  bool _isSearching = false; 
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -29,36 +44,7 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _focusNode.addListener(_onFocusChange);
-    _loadBannerAd();
     _carregarDeputados();
-  }
-
-  void _carregarDeputados() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final deputados = await DeputadoService.obterDeputados();
-      setState(() {
-        _allDeputados = deputados;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Erro ao carregar deputados: $e';
-        _isLoading = false;
-      });
-      print('Erro: $e');
-    }
-  }
-
-  void _loadBannerAd() {
-    _bannerAd = AdService().loadBannerAd();
-    setState(() {
-      _isBannerAdLoaded = true;
-    });
   }
 
   @override
@@ -66,108 +52,140 @@ class _HomeViewState extends State<HomeView> {
     _controller.dispose();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
-    AdService().disposeBannerAd();
     super.dispose();
+  }
+
+  // Carrega os dados da API
+  void _carregarDeputados() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 800)); 
+
+      final deputados = await DeputadoService.obterDeputados();
+      
+      setState(() {
+        _allDeputados = deputados;
+        _isLoading = false;
+        
+        // Extrai valores únicos para os filtros
+        _uniquePartidos = deputados.map((d) => d.partido).toSet();
+        _uniqueUFs = deputados.map((d) => d.uf).toSet();
+        
+        _applyFilters(); // Aplica filtros iniciais (todos os deputados)
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erro ao carregar deputados. Verifique sua conexão.';
+        _isLoading = false;
+      });
+      print('Erro: $e');
+    }
+  }
+  
+  // 6. Lógica de Filtro Unificada
+  void _applyFilters([String? partido, String? uf, String? cargo, String? cidade]) {
+    // 6.1. Atualiza o estado interno com os novos filtros, se fornecidos
+    if (partido != null || uf != null || cargo != null || cidade != null) {
+      _selectedPartido = partido;
+      _selectedEstado = uf;
+      _selectedCargo = cargo;
+      _selectedCidade = cidade;
+    }
+    
+    final query = _controller.text.toLowerCase();
+    
+    // 6.2. Filtra pela query de busca no campo de texto
+    List<Deputado> intermediateList = _allDeputados.where((dep) {
+      bool matchesSearch = query.isEmpty || 
+          dep.nome.toLowerCase().contains(query) ||
+          dep.nomeParlamentar.toLowerCase().contains(query) ||
+          dep.partido.toLowerCase().contains(query) ||
+          dep.uf.toLowerCase().contains(query);
+          
+      return matchesSearch;
+    }).toList();
+    
+    // 6.3. Aplica filtros selecionados (Dropdowns)
+    _filteredDeputados = intermediateList.where((dep) {
+      // Filtros baseados nos dados reais (partido e UF)
+      bool matchesPartido = _selectedPartido == null || dep.partido == _selectedPartido;
+      bool matchesEstado = _selectedEstado == null || dep.uf == _selectedEstado;
+      
+      // Filtros simulados (Cargo e Cidade - lógica simplificada)
+      bool matchesCargo = _selectedCargo == null || (_selectedCargo == 'Deputado Federal'); 
+      bool matchesCidade = _selectedCidade == null; 
+
+      return matchesPartido && matchesEstado && matchesCargo && matchesCidade;
+    }).toList();
+    
+    // 6.4. Atualiza o estado de busca ativa
+    _isSearching = query.isNotEmpty || _isFilterActive();
+  }
+
+  // 7. Callbacks para o SearchBarWidget
+  void _handleFilterApplied(String query, String? partido, String? uf, String? cargo, String? cidade) {
+    setState(() {
+      _controller.text = query;
+      _applyFilters(partido, uf, cargo, cidade);
+    });
+  }
+
+  void _handleSearchQueryChanged(String query) {
+    setState(() {
+      _applyFilters(); // Re-aplica filtros com o novo texto
+    });
+  }
+
+  void _handleClear() {
+    setState(() {
+      _controller.clear();
+      _selectedPartido = null;
+      _selectedEstado = null;
+      _selectedCargo = null;
+      _selectedCidade = null;
+      _applyFilters();
+    });
+    _focusNode.unfocus();
   }
 
   void _onFocusChange() {
     if (_focusNode.hasFocus) {
-      _onSearchChanged(_controller.text);
       setState(() {
-        _isSearching = true;
+        _applyFilters();
       });
     } else {
       setState(() {
-        _isSearching = _controller.text.isNotEmpty;
+        if (_controller.text.isEmpty) {
+          _isSearching = _isFilterActive();
+        }
       });
     }
   }
-
-  void _onSearchChanged(String value) {
-    setState(() {
-      if (value.isEmpty) {
-        _filteredDeputados = [];
-      } else {
-        _filteredDeputados = _allDeputados
-            .where((dep) =>
-                dep.nome.toLowerCase().contains(value.toLowerCase()) ||
-                dep.nomeParlamentar.toLowerCase().contains(value.toLowerCase()) ||
-                dep.partido.toLowerCase().contains(value.toLowerCase()) ||
-                dep.uf.toLowerCase().contains(value.toLowerCase()))
-            .toList();
-      }
-
-      if (value.isNotEmpty || _focusNode.hasFocus) {
-        _isSearching = true;
-      }
-    });
+  
+  // Verifica se há algum filtro ativo (Dropdowns)
+  bool _isFilterActive() {
+    return _selectedPartido != null || _selectedEstado != null || _selectedCargo != null || _selectedCidade != null;
   }
 
-  void _clearSearch() {
-    setState(() {
-      _controller.clear();
-      _filteredDeputados = [];
-      _isSearching = false;
-      _focusNode.unfocus();
-    });
-  }
-
-  PreferredSizeWidget _buildSearchBar() {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(70.0),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              decoration: InputDecoration(
-                hintText: 'Pesquisar...',
-                filled: true,
-                fillColor: const Color.fromARGB(255, 204, 204, 204),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(
-                    color: Colors.grey,
-                    width: 1.5,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor,
-                    width: 1.5,
-                  ),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
-                prefixIcon: const Icon(Icons.search, color: Colors.black),
-                suffixIcon: _controller.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.black),
-                        onPressed: _clearSearch,
-                      )
-                    : null,
-              ),
-              onChanged: _onSearchChanged,
-              style: const TextStyle(color: Colors.black),
-            ),
-          ),
-          Container(
-            height: 1.0,
-            color: Colors.grey.shade300,
-          ),
-        ],
-      ),
+  void _navigateToRegistroPoliticos() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RegistroView()),
     );
   }
 
-  // Widget para exibir cada deputado na lista
+  void _shareApp() {
+     ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Simulando compartilhamento do App...'))
+     );
+  }
+
   Widget _buildDeputadoTile(Deputado deputado) {
+    // ... Código do ListTile (mantido o mesmo) ...
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: ListTile(
@@ -242,13 +260,74 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  Widget _buildActionFooter() {
+    // ... Código do Footer (mantido o mesmo) ...
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1.0)),
+      ),
+      height: 60,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: Colors.grey.shade800),
+            onPressed: _carregarDeputados,
+            tooltip: 'Recarregar Lista',
+          ),
+          
+          IconButton(
+            icon: const Icon(Icons.person_add, color: Colors.black),
+            onPressed: _navigateToRegistroPoliticos,
+            tooltip: 'Cadastrar Político',
+          ),
+          
+          IconButton(
+            icon: Icon(Icons.share, color: Colors.grey.shade800),
+            onPressed: _shareApp,
+            tooltip: 'Compartilhar Aplicativo',
+          ),
+          
+          IconButton(
+            icon: Icon(Icons.star_outline, color: Colors.grey.shade800),
+            onPressed: () {
+               ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Simulando acesso aos Favoritos...'))
+               );
+            },
+            tooltip: 'Favoritos',
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final listToShow = _isSearching && (_controller.text.isNotEmpty || _isFilterActive()) ? _filteredDeputados : _allDeputados;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil Público'),
+        title: const Text('Perfil Público', style: TextStyle(color: Colors.black),),
         centerTitle: true,
-        bottom: _buildSearchBar(),
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        elevation: 0,
+        // 8. Usa o novo SearchBarWidget
+        bottom: SearchBarWidget(
+          uniquePartidos: _uniquePartidos,
+          uniqueUFs: _uniqueUFs,
+          uniqueCargos: _uniqueCargos,
+          uniqueCidades: _uniqueCidades,
+          controller: _controller,
+          focusNode: _focusNode,
+          isFilterActive: _isFilterActive(),
+          onFilterApplied: _handleFilterApplied,
+          onSearchQueryChanged: _handleSearchQueryChanged,
+          onClear: _handleClear,
+        ),
       ),
       drawer: const AppMenu(),
       body: Column(
@@ -286,48 +365,27 @@ class _HomeViewState extends State<HomeView> {
                             ],
                           ),
                         )
-                      : _isSearching
-                          ? _filteredDeputados.isEmpty &&
-                                  _controller.text.isNotEmpty
-                              ? const Center(
-                                  child: Text('Nenhum resultado encontrado.'),
-                                )
-                              : ListView.builder(
-                                  itemCount: _filteredDeputados.length,
-                                  itemBuilder: (context, index) {
-                                    final deputado = _filteredDeputados[index];
-                                    return _buildDeputadoTile(deputado);
-                                  },
-                                )
-                          : const Center(
-                              child: Text(
-                                'Bem-vindo à tela inicial!',
-                                style: TextStyle(fontSize: 20),
+                      : listToShow.isEmpty && !_isLoading
+                          ? Center(
+                               child: Text(
+                                _isSearching 
+                                  ? 'Nenhum resultado encontrado. Tente redefinir os filtros.'
+                                  : 'Nenhum deputado carregado. Arraste para baixo para recarregar ou use o botão Atualizar.',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.grey),
                               ),
+                            )
+                          : ListView.builder(
+                              itemCount: listToShow.length,
+                              itemBuilder: (context, index) {
+                                final deputado = listToShow[index];
+                                return _buildDeputadoTile(deputado);
+                              },
                             ),
             ),
           ),
-          // Banner Ad no rodapé
-          if (_isBannerAdLoaded && _bannerAd != null)
-            Container(
-              color: Colors.grey.shade200,
-              child: SizedBox(
-                height: _bannerAd!.size.height.toDouble(),
-                width: _bannerAd!.size.width.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-            )
-          else
-            Container(
-              color: Colors.grey.shade300,
-              height: 50,
-              child: const Center(
-                child: Text(
-                  'Carregando anúncios...',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ),
-            ),
+          
+          _buildActionFooter(),
         ],
       ),
     );
