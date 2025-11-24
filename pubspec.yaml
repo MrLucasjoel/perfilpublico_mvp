@@ -13,6 +13,8 @@ dependencies:
   #google_mobile_ads: ^6.0.0
   http: ^1.1.0
   shared_preferences: ^2.5.3
+  flutter_dotenv: ^6.0.0
+  supabase_flutter: ^2.5.4
 
 dev_dependencies:
   flutter_test:
@@ -23,3 +25,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/perfil_publico_logo.jpeg
+    - .env
