@@ -1,25 +1,34 @@
 import 'package:http/http.dart' as http;
 import 'package:perfilpublico/src/model/deputado.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DeputadoService {
   static const String _baseUrl = 'https://www.camara.leg.br/SitCamaraWS/Deputados.asmx';
 
   /// Busca todos os deputados da API
   static Future<List<Deputado>> obterDeputados() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/ObterDeputados'),
       ).timeout(
         const Duration(seconds: 10),
       );
+      
 
       if (response.statusCode == 200) {
+        await prefs.setString('deputados_xml', response.body);
         return _parseDeputados(response.body);
       } else {
         throw Exception('Erro ao buscar deputados: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro na conexão: $e');
+      String? storedXml = prefs.getString('deputados_xml');
+      if (storedXml != null) {
+        return _parseDeputados(storedXml);
+      } else {
+        throw Exception('Erro na conexão: $e');
+      }
     }
   }
 
