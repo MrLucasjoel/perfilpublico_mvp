@@ -71,7 +71,11 @@ class _RegistroFormViewState extends State<RegistroFormView> {
     return null;
   }
 
-  Widget _buildRichTextField({required String label, required TextEditingController controller}) {
+  Widget _buildRichTextField({
+    required String label, 
+    required TextEditingController controller,
+      }) 
+    {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -101,24 +105,27 @@ class _RegistroFormViewState extends State<RegistroFormView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Formulário de Cadastro'),
+        title: const Text('Formulário de Cadastro', 
+          style: TextStyle(color: Colors.black
+          ),
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: ListView(
-            children: [
+            children: <Widget>[
               if (widget.email != null) ...[
-                Text('Cadastrando: ${widget.email}', style: const TextStyle(fontSize: 14)),
-                const SizedBox(height: 12),
+                Text('Cadastrando: ${widget.email}', style: const TextStyle(fontSize: 8)),
+                const SizedBox(height: 32),
               ],
               if (!_codeVerified) ...[
                 const Text(
                   'Digite o código de verificação enviado por e-mail:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 32),
                 TextFormField(
                   controller: _codeController,
                   keyboardType: TextInputType.number,
@@ -127,12 +134,15 @@ class _RegistroFormViewState extends State<RegistroFormView> {
                     hintText: 'Código de 6 dígitos',
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _verifyCode,
-                  child: const Text('Verificar código'),
+                  child: const Text('Verificar código', 
+                    style: TextStyle(color: Colors.black,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
               ] else ...[
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -146,20 +156,25 @@ class _RegistroFormViewState extends State<RegistroFormView> {
                     style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
               ],
-              _buildRichTextField(
+              _buildRichTextField( 
                 label: 'Currículo acadêmico / cursos (até 500 caracteres)',
                 controller: _academic,
               ),
+              
+              const SizedBox(height: 32),
               _buildRichTextField(
                 label: 'Currículo pessoal (até 500 caracteres)',
                 controller: _personal,
               ),
+              const SizedBox(height: 32),
               _buildRichTextField(
                 label: 'Currículo empresarial (até 500 caracteres)',
                 controller: _business,
               ),
+              
+              const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _codeVerified ? _submit : null,
                 child: const Text('Salvar'),

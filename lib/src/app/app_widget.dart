@@ -14,7 +14,7 @@ class AppWidget extends StatelessWidget {
         useMaterial3: true,
         appBarTheme: const AppBarTheme(
           backgroundColor: Color.fromARGB(255, 204, 204, 204),
-          foregroundColor: Color.fromARGB(255, 224, 224, 224),
+          foregroundColor: Color.fromARGB(255, 0, 0, 0),
           elevation: 0,
         ),
       ),

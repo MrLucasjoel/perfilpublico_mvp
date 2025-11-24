@@ -44,7 +44,10 @@ class _RegistroViewState extends State<RegistroView> {
   void _accessForm() {
     if (_generatedCode == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Envie o código de verificação primeiro')),
+        const SnackBar(content: Text('Envie o código de verificação primeiro',
+          style: TextStyle(color: Colors.black),
+          )
+        ),
       );
       return;
     }
@@ -65,7 +68,10 @@ class _RegistroViewState extends State<RegistroView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tela de Cadastro'),
+        title: const Text('Tela de Cadastro', 
+          style: TextStyle(color: Colors.black
+          ),
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -84,6 +90,12 @@ class _RegistroViewState extends State<RegistroView> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.black, // Cor da borda normal
+                        width: 1.0,
+                      ),
+                    ),
                   border: OutlineInputBorder(),
                   hintText: 'ex: nome@camara.leg.br',
                 ),
@@ -96,7 +108,10 @@ class _RegistroViewState extends State<RegistroView> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _sendVerificationCode,
-                child: const Text('Enviar código de verificação'),
+                child: const Text('Enviar código de verificação',
+                  style: TextStyle(color: Colors.black
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
